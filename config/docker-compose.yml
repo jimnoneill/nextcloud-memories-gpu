@@ -1,0 +1,30 @@
+# go-vod Docker Compose
+# Reference configuration — deploy.sh generates this automatically
+
+services:
+  go-vod:
+    image: radialapps/go-vod:latest
+    container_name: go-vod
+    restart: unless-stopped
+    
+    # NVIDIA GPU runtime
+    runtime: nvidia
+    
+    environment:
+      # Use all GPUs, or specify: "0" or "0,1"  
+      - NVIDIA_VISIBLE_DEVICES=all
+      # Nextcloud URL for auto-configuration
+      - NEXTCLOUD_HOST=https://cloud.example.com
+    
+    volumes:
+      # NFS-mounted Nextcloud data → /data (read-only)
+      - /mnt/nextcloud-data:/data:ro
+      # Transcoded segments cache
+      - ./tmp:/tmp/go-vod
+    
+    # Host networking for simplicity
+    network_mode: host
+
+# Verify after start:
+#   docker logs go-vod | grep NVENC
+#   Expected: NVENC:true

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="gpu" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#76b900"/>
+      <stop offset="100%" style="stop-color:#4a7c00"/>
+    </linearGradient>
+    <linearGradient id="cloud" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0082c9"/>
+      <stop offset="100%" style="stop-color:#005a8c"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Cloud (Nextcloud) -->
+  <path d="M85 45c-2-12-12-21-25-21-10 0-19 6-23 14-1 0-2 0-3 0-11 0-19 9-19 19 0 11 9 19 19 19h51c9 0 16-7 16-16 0-8-7-15-16-15z" 
+        fill="url(#cloud)" opacity="0.9"/>
+  
+  <!-- GPU chip -->
+  <rect x="40" y="65" width="40" height="30" rx="3" fill="url(#gpu)"/>
+  <rect x="45" y="70" width="10" height="10" rx="1" fill="#333"/>
+  <rect x="58" y="70" width="10" height="10" rx="1" fill="#333"/>
+  <rect x="45" y="82" width="23" height="3" rx="1" fill="#333"/>
+  
+  <!-- Connection pins -->
+  <rect x="42" y="95" width="3" height="6" fill="#666"/>
+  <rect x="48" y="95" width="3" height="6" fill="#666"/>
+  <rect x="54" y="95" width="3" height="6" fill="#666"/>
+  <rect x="60" y="95" width="3" height="6" fill="#666"/>
+  <rect x="66" y="95" width="3" height="6" fill="#666"/>
+  <rect x="72" y="95" width="3" height="6" fill="#666"/>
+  
+  <!-- Arrow connecting cloud to GPU -->
+  <path d="M60 56 L60 62" stroke="#444" stroke-width="2" stroke-dasharray="2,2"/>
+</svg>

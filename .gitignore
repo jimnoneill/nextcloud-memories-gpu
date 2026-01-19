@@ -1,0 +1,17 @@
+# Environment (contains your IPs)
+.env
+
+# Logs
+*.log
+tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
