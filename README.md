@@ -31,7 +31,7 @@ Nextcloud Memories transcodes videos on-the-fly for smooth browser playback. Wit
 ┌─────────────────────┐                    ┌─────────────────────┐
 │   STORAGE SERVER    │                    │     GPU SERVER      │
 │                     │      NFS (ro)      │                     │
-│   Nextcloud         │◄──────────────────►│   NVIDIA GPU    │
+│   Nextcloud         │◄──────────────────►│   NVIDIA GPU        │
 │   Memories          │                    │   go-vod + NVENC    │
 │   Your Files        │◄──────────────────►│   HLS Segments      │
 │                     │    HTTP :47788     │                     │
