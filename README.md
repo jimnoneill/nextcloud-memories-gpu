@@ -19,6 +19,7 @@
   <img src="https://img.shields.io/badge/Nextcloud-Memories%207.0+-0082c9?style=flat-square&logo=nextcloud" alt="Nextcloud Memories">
   <img src="https://img.shields.io/badge/NVIDIA-NVENC-76b900?style=flat-square&logo=nvidia" alt="NVIDIA NVENC">
   <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License">
+  <a href="https://paypal.me/jimnoneill"><img src="https://img.shields.io/badge/Donate-PayPal-00457C?style=flat-square&logo=paypal" alt="Donate via PayPal"></a>
 </p>
 
 ---
@@ -157,6 +158,16 @@ ssh gpu-server 'nvidia-smi'
 - **go-vod**: 0.2.6+
 - **NVIDIA Driver**: 525.0+
 - **CUDA**: 11.0+ (included in go-vod image)
+
+---
+
+## Support
+
+If this saved you a weekend of debugging, you can throw a few bucks my way. No pressure.
+
+<p>
+  <a href="https://paypal.me/jimnoneill"><img src="https://img.shields.io/badge/Donate-PayPal-00457C?style=for-the-badge&logo=paypal" alt="Donate via PayPal"></a>
+</p>
 
 ---
 
