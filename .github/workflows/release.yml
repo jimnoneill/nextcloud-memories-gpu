@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to package (e.g., v1.0.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build archive + GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve tag / version
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=$TAG"          >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION"  >> "$GITHUB_OUTPUT"
+
+      - name: Verify VERSION file matches tag
+        run: |
+          FILE_VERSION=$(cat VERSION)
+          if [ "$FILE_VERSION" != "${{ steps.vars.outputs.version }}" ]; then
+            echo "::error::VERSION file ($FILE_VERSION) != tag (${{ steps.vars.outputs.version }})"
+            exit 1
+          fi
+
+      - name: Build release archive
+        run: |
+          ARCHIVE="nextcloud-memories-gpu-${{ steps.vars.outputs.tag }}.tar.gz"
+          tar --transform "s,^,nextcloud-memories-gpu-${{ steps.vars.outputs.tag }}/," \
+              -czf "$ARCHIVE" \
+              VERSION \
+              README.md \
+              LICENSE \
+              CHANGELOG.md \
+              deploy.sh \
+              .env.example \
+              config \
+              docs
+          sha256sum "$ARCHIVE" | tee "${ARCHIVE}.sha256"
+          echo "archive=$ARCHIVE" >> "$GITHUB_ENV"
+
+      - name: Extract changelog section for this version
+        run: |
+          awk '/^## \[${{ steps.vars.outputs.version }}\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then
+            echo "No changelog section for ${{ steps.vars.outputs.version }}. Using tag name." > RELEASE_NOTES.md
+          fi
+          echo "" >> RELEASE_NOTES.md
+          echo "---" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "### Install" >> RELEASE_NOTES.md
+          echo '```bash' >> RELEASE_NOTES.md
+          echo "curl -fsSL https://github.com/jimnoneill/nextcloud-memories-gpu/releases/download/${{ steps.vars.outputs.tag }}/nextcloud-memories-gpu-${{ steps.vars.outputs.tag }}.tar.gz | tar xz" >> RELEASE_NOTES.md
+          echo "cd nextcloud-memories-gpu-${{ steps.vars.outputs.tag }}" >> RELEASE_NOTES.md
+          echo "cp .env.example .env && nano .env" >> RELEASE_NOTES.md
+          echo "./deploy.sh storage      # on storage server" >> RELEASE_NOTES.md
+          echo "./deploy.sh gpu          # on GPU server" >> RELEASE_NOTES.md
+          echo "./deploy.sh nextcloud    # on storage server" >> RELEASE_NOTES.md
+          echo '```' >> RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: ${{ steps.vars.outputs.version }}
+          body_path: RELEASE_NOTES.md
+          files: |
+            ${{ env.archive }}
+            ${{ env.archive }}.sha256
+          make_latest: true

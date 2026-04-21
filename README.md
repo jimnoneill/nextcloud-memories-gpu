@@ -136,6 +136,8 @@ ssh gpu-server 'nvidia-smi'
 | [Troubleshooting](docs/troubleshooting.md) | Common issues & fixes |
 | [Manual Setup](docs/manual-setup.md) | Step-by-step without scripts |
 | [Admin UI](docs/admin-ui.md) | Nextcloud admin settings |
+| [Releasing](docs/releasing.md) | Maintainer SemVer workflow |
+| [Changelog](CHANGELOG.md) | Version history |
 
 ---
 

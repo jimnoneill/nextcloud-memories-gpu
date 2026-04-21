@@ -5,8 +5,8 @@ set -euo pipefail
 # Nextcloud Memories GPU Transcoding - Deploy Script
 # =============================================================================
 
-VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VERSION="$(cat "${SCRIPT_DIR}/VERSION" 2>/dev/null || echo "0.0.0-dev")"
 
 # -----------------------------------------------------------------------------
 # Colors & Formatting
@@ -375,6 +375,7 @@ ${BOLD}Commands:${NC}
     ${BOLD}nextcloud${NC}   Configure Nextcloud Memories settings
     ${BOLD}status${NC}      Check installation status
     ${BOLD}logs${NC}        Tail go-vod logs from GPU server
+    ${BOLD}version${NC}     Print version
     ${BOLD}help${NC}        Show this message
 
 ${BOLD}Workflow:${NC}
@@ -386,7 +387,7 @@ ${BOLD}Workflow:${NC}
     6. Run ${DIM}./deploy.sh status${NC} to verify
 
 ${BOLD}Documentation:${NC}
-    https://github.com/user/nextcloud-memories-gpu-transcoding
+    https://github.com/jimnoneill/nextcloud-memories-gpu
 
 EOF
 }
@@ -401,6 +402,7 @@ main() {
         nextcloud) cmd_nextcloud ;;
         status)    cmd_status ;;
         logs)      cmd_logs ;;
+        version|--version|-v) echo "$VERSION" ;;
         help|--help|-h) cmd_help ;;
         *)
             error "Unknown command: $1"
