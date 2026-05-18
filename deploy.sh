@@ -374,6 +374,7 @@ ${BOLD}Commands:${NC}
     ${BOLD}gpu${NC}         Deploy go-vod container on GPU server
     ${BOLD}nextcloud${NC}   Configure Nextcloud Memories settings
     ${BOLD}status${NC}      Check installation status
+    ${BOLD}check-cuda${NC}  Diagnose CUDA/driver/toolkit compatibility
     ${BOLD}logs${NC}        Tail go-vod logs from GPU server
     ${BOLD}version${NC}     Print version
     ${BOLD}help${NC}        Show this message
@@ -401,6 +402,7 @@ main() {
         gpu)       cmd_gpu ;;
         nextcloud) cmd_nextcloud ;;
         status)    cmd_status ;;
+        check-cuda) cmd_check_cuda ;;
         logs)      cmd_logs ;;
         version|--version|-v) echo "$VERSION" ;;
         help|--help|-h) cmd_help ;;
@@ -413,3 +415,80 @@ main() {
 }
 
 main "$@"
+
+cmd_check_cuda() {
+    load_env
+    validate_env
+
+    step "CUDA Compatibility Check"
+
+    # Host driver
+    local driver_version
+    driver_version=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -1) || true
+    if [[ -z "$driver_version" ]]; then
+        die "nvidia-smi not found or no GPU detected on this host"
+    fi
+    success "Host driver: $driver_version"
+
+    # Toolkit version
+    local toolkit_version
+    toolkit_version=$(nvidia-container-cli --version 2>/dev/null | grep 'cli-version' | awk '{print $2}') || true
+    if [[ -z "$toolkit_version" ]]; then
+        die "nvidia-container-cli not found. Install nvidia-container-toolkit."
+    fi
+    success "Container toolkit: $toolkit_version"
+
+    # Extract major driver version
+    local driver_major
+    driver_major=$(echo "$driver_version" | cut -d. -f1)
+
+    # Check for known driver/toolkit incompatibility
+    # Driver 580+ requires toolkit >1.19.0 for proper device node passthrough.
+    # Toolkit 1.19.0 does not pass /dev/nvidia-uvm-tools, causing cuInit() to
+    # fail with CUDA_ERROR_UNKNOWN in unprivileged containers.
+    if (( driver_major >= 580 )) && [[ "$toolkit_version" == "1.19.0" ]]; then
+        warn "KNOWN INCOMPATIBILITY: driver $driver_version + toolkit $toolkit_version"
+        echo "  nvidia-container-toolkit 1.19.0 does not pass /dev/nvidia-uvm-tools"
+        echo "  into unprivileged containers with driver >=580.x."
+        echo ""
+        echo "  Workaround: add 'privileged: true' to docker-compose.yml (already in"
+        echo "  the reference config shipped with this repo)."
+        echo ""
+        echo "  Proper fix: sudo apt update && sudo apt install nvidia-container-toolkit"
+        echo "  then: sudo systemctl restart docker && docker restart go-vod"
+        echo ""
+    else
+        success "No known driver/toolkit incompatibility"
+    fi
+
+    # Live CUDA test inside the running container
+    info "Testing CUDA inside go-vod container..."
+    if docker exec "$CONTAINER_NAME" nvidia-smi > /dev/null 2>&1; then
+        success "nvidia-smi works inside container"
+    else
+        error "nvidia-smi FAILED inside container"
+        echo "  The NVIDIA runtime is not passing GPU devices into the container."
+        echo "  Check: docker inspect go-vod | grep Runtime"
+        return 1
+    fi
+
+    # Test actual cuInit via ffmpeg
+    if docker exec "$CONTAINER_NAME" /usr/local/bin/ffmpeg -init_hw_device cuda=cu -f lavfi -i nullsrc=s=256x256:d=1 -c:v h264_nvenc -f null - > /dev/null 2>&1; then
+        success "CUDA transcoding works (h264_nvenc OK)"
+    else
+        error "cuInit() FAILED inside container"
+        echo ""
+        echo "  nvidia-smi works but CUDA does not. This is the driver/toolkit"
+        echo "  mismatch described above. Apply the workaround:"
+        echo "    1. Add 'privileged: true' to docker-compose.yml"
+        echo "    2. docker compose up -d"
+        echo ""
+        echo "  Or update the toolkit:"
+        echo "    sudo apt update && sudo apt install nvidia-container-toolkit"
+        echo "    sudo systemctl restart docker && docker restart go-vod"
+        return 1
+    fi
+
+    echo ""
+    success "All CUDA checks passed"
+}
