@@ -1,5 +1,5 @@
 # go-vod Docker Compose
-# Reference configuration — deploy.sh generates this automatically
+# Reference configuration -- deploy.sh generates this automatically
 
 services:
   go-vod:
@@ -9,6 +9,10 @@ services:
     
     # NVIDIA GPU runtime
     runtime: nvidia
+    # Required: nvidia-container-toolkit <=1.19 does not pass all device
+    # nodes (nvidia-uvm-tools) in unprivileged mode with driver >=580.x.
+    # Remove once toolkit is updated to a version that handles this.
+    privileged: true
     
     environment:
       # Use all GPUs, or specify: "0" or "0,1"  
@@ -17,7 +21,7 @@ services:
       - NEXTCLOUD_HOST=https://cloud.example.com
     
     volumes:
-      # NFS-mounted Nextcloud data → /data (read-only)
+      # NFS-mounted Nextcloud data -> /data (read-only)
       - /mnt/nextcloud-data:/data:ro
       # Transcoded segments cache
       - ./tmp:/tmp/go-vod
